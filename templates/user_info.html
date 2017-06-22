@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    <h2>User: {{ user.user_id }}</h2>
+    <ul>
+      <li><b>Email:</b> {{ user.email}} </li>
+      <li><b>Age:</b> {{ user.age}} </li>
+      <li><b>Zipcode:</b> {{ user.zipcode}} </li>  
+    </ul>
+
+{% endblock %}
