@@ -5,9 +5,13 @@
     <ul>
       <li><b>Released At:</b> {{ released_date }} </li>
       <li><b>IMDB URL:</b> <a href={{ movie.imdb_url }}>{{ movie.imdb_url }}</a> </li>
+      <li><b>Average Rating:</b> {{ avg_rating }}</li>
     </ul>
     <br><br>
-
+    {% if prediction %}
+    <p>Predicted rating for you: {{ prediction }}</p>
+    {% endif %}
+    <br>
     {% if session.get("user_id") %}
         <form action="/rate" method="POST">
             <h2>Rate this movie:</h2>

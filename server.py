@@ -127,7 +127,26 @@ def show_movieinfo(movie_id):
     movie = Movie.query.get(movie_id)
     released_date = movie.released_at.strftime("%A, %B %d, %Y")
 
-    return render_template("movie_info.html", movie=movie, released_date=released_date)
+    user_id = session.get("user_id")
+
+    if user_id:
+        user_rating = Rating.query.filter_by(movie_id=movie_id, user_id=user_id).first()
+    else:
+        user_rating = None
+
+    rating_scores = [r.score for r in movie.ratings]
+    avg_rating = float(sum(rating_scores)) / len(rating_scores)
+
+    prediction = None
+
+    if (not user_rating) and user_id:
+        user = User.query.get(user_id)
+        if user:
+            prediction = user.predict_rating(movie_id)
+
+    return render_template("movie_info.html", movie=movie, released_date=released_date,
+                           user_rating=user_rating, avg_rating=avg_rating,
+                           prediction=prediction)
 
 
 @app.route("/rate", methods=["POST"])
@@ -151,7 +170,6 @@ def rate():
     db.session.commit()
 
     return redirect("/movies")
-
 
 
 if __name__ == "__main__":

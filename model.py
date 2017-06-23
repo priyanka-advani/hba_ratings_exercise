@@ -30,11 +30,80 @@ class User(db.Model):
     age = db.Column(db.Integer, nullable=True)
     zipcode = db.Column(db.String(15), nullable=True)
 
-    def similarity():
-        """Check similarity of ratings with other users."""
+    def similarity(self, other_user):
+        """Return Pearson rating for user compared to other user."""
 
-        
-        pass
+        user_ratings = {}
+        paired_ratings = []
+
+        for rating in self.ratings:
+            user_ratings[rating.movie_id] = rating
+
+        for rating in other_user.ratings:
+            user_rating = user_ratings.get(rating.movie_id)
+            if user_rating:
+                paired_ratings.append((user_rating.score, rating.score))
+
+        if paired_ratings:
+            return correlation.pearson(paired_ratings)
+
+        else:
+            return 0.0
+
+    # def predict_rating(self, movie_id):
+    #     """Sorte the similarity of group of users."""
+
+    #     similarity_desc = []
+
+    #     movie = Movie.query.filter_by(movie_id=movie_id).one()
+
+    #     other_users = [rating.user for rating in movie.ratings]
+
+    #     user = User.query.filter_by(user_id=self.user_id).one()
+
+    #     if user in other_users:
+    #         other_users.remove(user)
+
+    #     for other_user in other_users:
+    #         similarity_desc.append((self.similarity(other_user), other_user.user_id))
+
+    #     similarity_desc.sort(reverse=True)
+
+    #     most_similar_user = similarity_desc[0]
+
+    #     similarity, similar_userid = most_similar_user
+
+    #     movie_rating = Rating.query.filter_by(user_id=similar_userid, movie_id=movie_id).one()
+
+    #     print similarity, similar_userid
+
+    #     return similarity * movie_rating.score
+
+    def predict_rating(self, movie_id):
+        """Sorte the similarity of group of users."""
+
+        similarity_desc = []
+
+        movie = Movie.query.filter_by(movie_id=movie_id).one()
+
+        other_users = [rating.user for rating in movie.ratings]
+
+        user = User.query.filter_by(user_id=self.user_id).one()
+
+        if user in other_users:
+            other_users.remove(user)
+
+        for other_user in other_users:
+            for movie_rating in other_user.ratings:
+                similarity_desc.append((self.similarity(other_user), movie_rating.score))
+
+        pos = sum([sim * score for sim, score in similarity_desc if sim > 0])
+
+        neg = sum([-sim * abs(score - 6) for sim, score in similarity_desc if sim < 0])
+
+        denominator = sum([abs(sim) for sim, score in similarity_desc])
+
+        return (pos + neg)/denominator
 
 
 # Put your Movie and Rating model classes here.
@@ -84,6 +153,27 @@ def connect_to_db(app):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.app = app
     db.init_app(app)
+
+ # def sorte_similarity(movie_id, user_id):
+ #    """Sorte the similarity of group of users."""
+
+ #    similarity_desc = []
+
+ #    movie = Movie.query.filter_by(movie_id=movie_id).one()
+
+ #    user = User.query.get(user_id)
+
+ #    other_users = [rating.user for rating in movie.ratings]
+
+ #    for other_user in other_users:
+ #        similarity_desc.append((user.similarity(other_user), other_user.user_id))
+
+ #    similarity_desc.sort(reverse=True)
+
+
+ #    return similarity_desc
+
+
 
 
 if __name__ == "__main__":
